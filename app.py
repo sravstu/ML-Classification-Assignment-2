@@ -32,7 +32,7 @@ st.header("Interactive Prediction")
 
 selected = st.selectbox("Select Classification Model", list(models.keys()))
 
-model_path = Path("model") / (models[selected] + ".joblib")
+model_path = Path(models[selected] + ".joblib")
 model = joblib.load(model_path)
 
 test_data = pd.read_csv("test_data.csv")
