@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import joblib
+from sklearn.metrics import classification_report, confusion_matrix
 from pathlib import Path
 
 st.set_page_config(
@@ -65,3 +66,61 @@ if st.button("Predict"):
     st.write(f"Actual Class: {actual_label}")
 
 st.caption("Educational demonstration only. Not for clinical diagnosis.")
+
+
+st.divider()
+st.header("Upload Test Data and Evaluate Model")
+
+uploaded_file = st.file_uploader(
+    "Upload test_data.csv",
+    type=["csv"]
+)
+
+if uploaded_file is not None:
+    uploaded_data = pd.read_csv(uploaded_file)
+
+    st.subheader("Uploaded Test Data")
+    st.dataframe(uploaded_data.head())
+
+    if "target" not in uploaded_data.columns:
+        st.error("CSV must contain a target column.")
+    else:
+        X_uploaded = uploaded_data.drop(columns=["target"])
+        y_uploaded = uploaded_data["target"]
+
+        model_path = Path("model") / f"{models[selected]}.joblib"
+
+        if not model_path.exists():
+            model_path = Path(f"{models[selected]}.joblib")
+
+        if not model_path.exists():
+            st.error("Saved model file not found.")
+        else:
+            loaded_model = joblib.load(model_path)
+
+            if st.button("Evaluate Uploaded Data"):
+                predictions = loaded_model.predict(X_uploaded)
+
+                st.subheader("Classification Report")
+                report = classification_report(
+                    y_uploaded,
+                    predictions,
+                    zero_division=0
+                )
+                st.text(report)
+
+                st.subheader("Confusion Matrix")
+                matrix = confusion_matrix(
+                    y_uploaded,
+                    predictions,
+                    labels=[0, 1]
+                )
+
+                st.dataframe(
+                    pd.DataFrame(
+                        matrix,
+                        index=["Actual 0", "Actual 1"],
+                        columns=["Predicted 0", "Predicted 1"]
+                    )
+                )
+
